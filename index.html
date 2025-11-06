@@ -11,9 +11,24 @@
     <style>
       body {
         font-family: 'Exo 2', sans-serif;
+        /* Animated grid background for a high-tech feel */
+        background-color: #0f172a; /* bg-slate-900 */
+        background-image:
+          linear-gradient(rgba(56, 189, 248, 0.1) 1px, transparent 1px),
+          linear-gradient(to right, rgba(56, 189, 248, 0.1) 1px, transparent 1px);
+        background-size: 40px 40px;
+        animation: pan-background 30s linear infinite;
       }
       .font-mono {
         font-family: 'Roboto Mono', monospace;
+      }
+      @keyframes pan-background {
+        0% {
+          background-position: 0% 0%;
+        }
+        100% {
+          background-position: 100% 100%;
+        }
       }
     </style>
 <script type="importmap">

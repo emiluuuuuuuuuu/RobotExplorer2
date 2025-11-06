@@ -13,7 +13,7 @@ const PowerOnScreen: React.FC<PowerOnScreenProps> = ({ onPowerOn, isPoweringOn }
         <h1 className="text-5xl md:text-7xl font-extrabold text-cyan-300 tracking-wider">
           ROBOT EXPLORER
         </h1>
-        <p className="text-slate-400 mt-2 text-lg">SYSTEMS OFFLINE</p>
+        <p className="text-slate-400 mt-2 text-lg">SYSTEM STANDBY</p>
       </div>
 
       <button

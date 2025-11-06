@@ -15,7 +15,7 @@ const App: React.FC = () => {
   };
   
   return (
-    <div className="bg-slate-900 text-slate-100 min-h-screen w-full transition-colors duration-500">
+    <div className="text-slate-100 min-h-screen w-full transition-colors duration-500">
       {!showExplorer ? (
         <PowerOnScreen onPowerOn={handlePowerOn} isPoweringOn={isPoweredOn} />
       ) : (

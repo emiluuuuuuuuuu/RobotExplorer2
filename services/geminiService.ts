@@ -1,4 +1,4 @@
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 // Store the client instance to reuse it across function calls.
 let ai: GoogleGenAI | null = null;
@@ -46,36 +46,4 @@ export const getPartDescription = async (partName: string): Promise<string> => {
     // Re-throw the error to be handled by the component's catch block.
     throw error;
   }
-};
-
-export const getTextToSpeech = async (text: string): Promise<string | null> => {
-    if (!navigator.onLine) {
-        // Audio is non-critical, so we can just return null if offline.
-        return null;
-    }
-
-    try {
-        const client = getAiClient(); // Get the client just-in-time.
-        const response = await client.models.generateContent({
-            model: "gemini-2.5-flash-preview-tts",
-            contents: [{ parts: [{ text: text }] }],
-            config: {
-                responseModalities: [Modality.AUDIO],
-                speechConfig: {
-                    voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName: 'Kore' }, // A friendly, clear voice
-                    },
-                },
-            },
-        });
-        const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-        if (!base64Audio) {
-            console.warn("No audio data returned from API.");
-            return null;
-        }
-        return base64Audio;
-    } catch (error) {
-        console.error("Error generating speech:", error);
-        return null; // Return null on any error for this non-critical feature.
-    }
 };
