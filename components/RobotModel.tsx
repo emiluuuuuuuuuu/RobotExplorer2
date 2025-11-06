@@ -57,7 +57,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ selectedPartId, onSelectPart })
     ];
 
     return (
-        <svg viewBox="0 0 300 300" className="w-full h-full max-w-2xl max-h-2xl drop-shadow-lg">
+        <svg viewBox="0 0 300 300" className="w-full h-full max-w-lg max-h-lg drop-shadow-lg">
             <g>
                  {/* Non-interactive neck part */}
                 <path d="M145 105 h10 v10 h-10 z" className="fill-slate-800 stroke-slate-950" strokeWidth="2" />

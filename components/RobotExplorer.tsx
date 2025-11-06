@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { RobotPart } from '../types';
 import RobotModel from './RobotModel';
 import Sidebar from './Sidebar';
-import { getPartDescription } from '../services/geminiService';
+import { getPartDescription, getTextToSpeech } from '../services/geminiService';
 
 const robotPartsData: RobotPart[] = [
     { id: 'head', name: 'Cognitive Core', description: 'The robot\'s main thinking and sensing unit.' },
@@ -16,7 +16,9 @@ const robotPartsData: RobotPart[] = [
 const RobotExplorer: React.FC = () => {
     const [selectedPart, setSelectedPart] = useState<RobotPart | null>(null);
     const [geminiDescription, setGeminiDescription] = useState<string>('');
+    const [audioData, setAudioData] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isAudioLoading, setIsAudioLoading] = useState<boolean>(false);
     const [isPanelVisible, setIsPanelVisible] = useState<boolean>(false);
 
     useEffect(() => {
@@ -28,24 +30,34 @@ const RobotExplorer: React.FC = () => {
         if (!partId) {
             setSelectedPart(null);
             setGeminiDescription('');
+            setAudioData(null);
             return;
         }
         const part = robotPartsData.find(p => p.id === partId);
         if (part) {
             setSelectedPart(part);
             setIsLoading(true);
+            setIsAudioLoading(true);
             setGeminiDescription('');
+            setAudioData(null);
 
             try {
                 const desc = await getPartDescription(part.name);
                 setGeminiDescription(desc);
+                setIsLoading(false);
+
+                const audioBase64 = await getTextToSpeech(desc);
+                setAudioData(audioBase64);
 
             } catch (error) {
                 console.error("Error during Gemini API fetch:", error);
                 // On any error, fall back to the onboard data cache.
                 setGeminiDescription(`${part.description} [UPLINK INTERRUPTED. REVERTING TO ONBOARD DATA CACHE.]`);
-            } finally {
                 setIsLoading(false);
+                setAudioData(null);
+            } finally {
+                // Ensure audio loading spinner always stops.
+                setIsAudioLoading(false);
             }
         }
     }, []);
@@ -53,16 +65,15 @@ const RobotExplorer: React.FC = () => {
 
     return (
         <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden p-4 md:p-8 gap-8 animate-fade-in">
-             <main className="flex-1 flex flex-col items-center justify-center h-full">
-                <h1 className="text-4xl font-extrabold text-cyan-300 tracking-wider text-center mb-4 uppercase">
-                    Robot Explorer
-                </h1>
+             <main className="flex-1 flex items-center justify-center h-full">
                 <RobotModel selectedPartId={selectedPart?.id || null} onSelectPart={handleSelectPart} />
             </main>
             <Sidebar
                 selectedPart={selectedPart}
                 geminiDescription={geminiDescription}
+                audioData={audioData}
                 isLoading={isLoading}
+                isAudioLoading={isAudioLoading}
                 isVisible={isPanelVisible}
             />
         </div>
