@@ -1,29 +1,41 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
+// Store the client instance to reuse it across function calls.
+let ai: GoogleGenAI | null = null;
 
-if (!API_KEY) {
-  // In a real app, you'd handle this more gracefully.
-  // For this context, we assume the key is always present.
-  console.warn("API_KEY environment variable not set.");
-}
+/**
+ * Lazily initializes and returns the GoogleGenAI client.
+ * This prevents the app from crashing on startup if the API key is missing or invalid.
+ * @returns {GoogleGenAI} The initialized GoogleGenAI client.
+ * @throws {Error} If the API_KEY environment variable is not set.
+ */
+const getAiClient = (): GoogleGenAI => {
+    if (ai) {
+        return ai;
+    }
+    
+    const API_KEY = process.env.API_KEY;
 
-// We check for API_KEY existence before initializing.
-// If the key is missing, we create a "dummy" ai object
-// that will allow the app to run without crashing, and our offline checks will handle the rest.
-const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+    if (!API_KEY) {
+        // This error will be caught by the calling function's try-catch block.
+        throw new Error("API_KEY environment variable not set.");
+    }
+    
+    // Initialize the client and cache it for subsequent calls.
+    ai = new GoogleGenAI({ apiKey: API_KEY });
+    return ai;
+};
 
 export const getPartDescription = async (partName: string): Promise<string> => {
-  if (!navigator.onLine || !ai) {
-    // Throw an error to be caught by the calling component.
-    // This is more robust than returning a magic string.
-    throw new Error("System is offline or API key is missing.");
+  if (!navigator.onLine) {
+    throw new Error("System is offline.");
   }
 
   try {
+    const client = getAiClient(); // Get the client just-in-time.
     const prompt = `Generate a concise, one-sentence technical description for a robot's "${partName}". Explain its primary function clearly and directly.`;
     
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
     });
@@ -31,20 +43,20 @@ export const getPartDescription = async (partName: string): Promise<string> => {
     return response.text;
   } catch (error) {
     console.error("Error generating content:", error);
-    // Re-throw the error to be handled by the component's catch block
+    // Re-throw the error to be handled by the component's catch block.
     throw error;
   }
 };
 
 export const getTextToSpeech = async (text: string): Promise<string | null> => {
-    // Do not attempt to generate speech if we are offline, the AI isn't configured.
-    // Audio is non-critical, so we can just return null instead of throwing.
-    if (!navigator.onLine || !ai) {
+    if (!navigator.onLine) {
+        // Audio is non-critical, so we can just return null if offline.
         return null;
     }
 
     try {
-        const response = await ai.models.generateContent({
+        const client = getAiClient(); // Get the client just-in-time.
+        const response = await client.models.generateContent({
             model: "gemini-2.5-flash-preview-tts",
             contents: [{ parts: [{ text: text }] }],
             config: {
@@ -58,13 +70,12 @@ export const getTextToSpeech = async (text: string): Promise<string | null> => {
         });
         const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
         if (!base64Audio) {
-            // This can happen if the API returns a valid response but no audio data.
             console.warn("No audio data returned from API.");
             return null;
         }
         return base64Audio;
     } catch (error) {
         console.error("Error generating speech:", error);
-        return null; // Return null on any error
+        return null; // Return null on any error for this non-critical feature.
     }
 };
