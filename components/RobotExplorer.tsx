@@ -89,6 +89,13 @@ const animationStyles = `
 .animate-fade-in {
     animation: fade-in 0.5s ease-out forwards;
 }
+@keyframes blink {
+    50% { opacity: 0; }
+}
+.blinking-cursor {
+    animation: blink 1s step-end infinite;
+    font-weight: bold;
+}
 `;
 
 const styleSheet = document.createElement("style");

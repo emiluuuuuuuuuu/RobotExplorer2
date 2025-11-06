@@ -32,6 +32,41 @@ async function decodeAudioData(
   return buffer;
 }
 
+/**
+ * A custom hook for creating a typewriter effect.
+ * @param text The full text to be typed.
+ * @param speed The speed in milliseconds between characters.
+ * @returns An object containing the currently typed text and a boolean indicating if typing is in progress.
+ */
+const useTypewriter = (text: string, speed: number = 25) => {
+    const [typedText, setTypedText] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+
+    useEffect(() => {
+        setTypedText('');
+        if (text) {
+            setIsTyping(true);
+            let i = 0;
+            const typingInterval = setInterval(() => {
+                if (i < text.length) {
+                    setTypedText(prev => prev + text.charAt(i));
+                    i++;
+                } else {
+                    clearInterval(typingInterval);
+                    setIsTyping(false);
+                }
+            }, speed);
+
+            return () => {
+                clearInterval(typingInterval);
+                setIsTyping(false);
+            };
+        }
+    }, [text, speed]);
+
+    return { typedText, isTyping };
+};
+
 
 interface SidebarProps {
   selectedPart: RobotPart | null;
@@ -46,6 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, audi
   const [isPlaying, setIsPlaying] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const { typedText, isTyping } = useTypewriter(geminiDescription, 20);
 
   useEffect(() => {
     // Initialize AudioContext on mount and ensure it's available for playback
@@ -112,16 +148,29 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, audi
   };
   
   const renderDescription = () => {
-    const parts = geminiDescription.split(' [');
-    const mainDesc = parts[0];
-    const suffix = parts.length > 1 ? `[${parts[1]}` : null;
+    const text = typedText;
+    // Regex to find the fallback message starting with a space and a bracket.
+    const suffixRegex = /(\s\[.+)$/;
+    const match = text.match(suffixRegex);
+
+    let mainDesc = text;
+    let suffix = null;
+
+    if (match && match.index) {
+        mainDesc = text.substring(0, match.index);
+        suffix = match[0];
+    }
 
     return (
         <div className="text-md text-slate-200 mt-1 min-h-[6rem]">
-            <p>{mainDesc}</p>
+            <p>
+                {mainDesc}
+                {!suffix && isTyping && <span className="blinking-cursor">▋</span>}
+            </p>
             {suffix && (
                 <p className="mt-2 text-xs text-amber-500/80 tracking-widest font-mono">
                     {suffix}
+                    {isTyping && <span className="blinking-cursor">▋</span>}
                 </p>
             )}
         </div>
