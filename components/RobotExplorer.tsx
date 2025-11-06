@@ -6,7 +6,7 @@ import { getPartDescription } from '../services/geminiService';
 
 const robotPartsData: RobotPart[] = [
     { id: 'head', name: 'Cognitive Core', description: 'The robot\'s main thinking and sensing unit.' },
-    { id: 'torso', name: 'Energy Hub', description: 'Houses the power source that keeps the robot going.' },
+    { id: 'torso', name: 'Energy Hub', description: 'Houses the primary power source, energizing all robotic systems.' },
     { id: 'left_arm', name: 'Utility Manipulator', description: 'A versatile arm for interacting with the world.' },
     { id: 'right_arm', name: 'Heavy-Duty Gripper', description: 'A strong arm for lifting and carrying objects.' },
     { id: 'left_leg', name: 'Stabilizer Leg', description: 'Helps the robot keep its balance.' },
@@ -41,8 +41,8 @@ const RobotExplorer: React.FC = () => {
                 setGeminiDescription(desc);
             } catch (error) {
                 console.error("Error during Gemini API fetch:", error);
-                // On any error, fall back to the onboard data cache.
-                setGeminiDescription(`${part.description} [UPLINK INTERRUPTED. REVERTING TO ONBOARD DATA CACHE.]`);
+                // On any error, fall back silently to the onboard data cache.
+                setGeminiDescription(part.description);
             } finally {
                 setIsLoading(false);
             }

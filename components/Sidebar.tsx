@@ -49,31 +49,12 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, isLo
   const { typedText, isTyping } = useTypewriter(geminiDescription, 20);
   
   const renderDescription = () => {
-    const text = typedText;
-    // Regex to find the fallback message starting with a space and a bracket.
-    const suffixRegex = /(\s\[.+)$/;
-    const match = text.match(suffixRegex);
-
-    let mainDesc = text;
-    let suffix = null;
-
-    if (match && match.index) {
-        mainDesc = text.substring(0, match.index);
-        suffix = match[0];
-    }
-
     return (
         <div className="text-md text-slate-200 mt-1 min-h-[6rem]">
             <p>
-                {mainDesc}
-                {!suffix && isTyping && <span className="blinking-cursor">▋</span>}
+                {typedText}
+                {isTyping && <span className="blinking-cursor">▋</span>}
             </p>
-            {suffix && (
-                <p className="mt-2 text-xs text-amber-500/80 tracking-widest font-mono">
-                    {suffix}
-                    {isTyping && <span className="blinking-cursor">▋</span>}
-                </p>
-            )}
         </div>
     );
   };
