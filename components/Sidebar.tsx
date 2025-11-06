@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RobotPart } from '../types';
-import { LoaderIcon, SpeakerWaveIcon, StopIcon } from './icons';
+import { LoaderIcon, SpeakerWaveIcon, StopIcon, WarningIcon } from './icons';
+import { API_ERROR_MESSAGE_PREFIX, OFFLINE_MESSAGE } from '../services/geminiService';
 
 // Audio decoding utilities as per Gemini documentation
 function decode(base64: string) {
@@ -46,6 +47,10 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, audi
   const [isPlaying, setIsPlaying] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+
+  const isOffline = geminiDescription === OFFLINE_MESSAGE;
+  const isApiError = geminiDescription.startsWith(API_ERROR_MESSAGE_PREFIX);
+  const hasError = isOffline || isApiError;
 
   useEffect(() => {
     // Initialize AudioContext on mount and ensure it's available for playback
@@ -162,6 +167,12 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, audi
                 <div className="flex items-center space-x-2 mt-2">
                   <LoaderIcon className="w-5 h-5 animate-spin text-cyan-400" />
                   <p>ACCESSING DATABASE...</p>
+                </div>
+              ) : hasError ? (
+                <div className="mt-2 flex flex-col items-center justify-center text-center font-mono border-2 border-dashed border-slate-700 rounded-md p-4 min-h-[6rem] text-slate-500">
+                    <WarningIcon className="w-8 h-8 mb-2 text-amber-500" />
+                    <p className="font-bold text-slate-400">{isOffline ? 'System Offline' : 'Analysis Error'}</p>
+                    <p className="text-sm">{isOffline ? 'Network connection is required.' : 'Could not retrieve data.'}</p>
                 </div>
               ) : (
                 <p className="text-md text-slate-200 mt-1 min-h-[6rem]">{geminiDescription}</p>

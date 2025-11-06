@@ -13,8 +13,8 @@ if (!API_KEY) {
 // that will allow the app to run without crashing, and our offline checks will handle the rest.
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
-const OFFLINE_MESSAGE = "System analysis unavailable. Connection to network is required.";
-const API_ERROR_MESSAGE_PREFIX = "Failed to retrieve technical specifications";
+export const OFFLINE_MESSAGE = "System analysis unavailable. Connection to network is required.";
+export const API_ERROR_MESSAGE_PREFIX = "Failed to retrieve technical specifications";
 
 export const getPartDescription = async (partName: string): Promise<string> => {
   if (!navigator.onLine || !ai) {
