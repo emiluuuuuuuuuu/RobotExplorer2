@@ -13,12 +13,11 @@ if (!API_KEY) {
 // that will allow the app to run without crashing, and our offline checks will handle the rest.
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
-export const OFFLINE_MESSAGE = "System analysis unavailable. Connection to network is required.";
-export const API_ERROR_MESSAGE_PREFIX = "Failed to retrieve technical specifications";
-
 export const getPartDescription = async (partName: string): Promise<string> => {
   if (!navigator.onLine || !ai) {
-    return OFFLINE_MESSAGE;
+    // Throw an error to be caught by the calling component.
+    // This is more robust than returning a magic string.
+    throw new Error("System is offline or API key is missing.");
   }
 
   try {
@@ -32,14 +31,15 @@ export const getPartDescription = async (partName: string): Promise<string> => {
     return response.text;
   } catch (error) {
     console.error("Error generating content:", error);
-    return `${API_ERROR_MESSAGE_PREFIX} for ${partName}. The connection to the central database may be compromised.`;
+    // Re-throw the error to be handled by the component's catch block
+    throw error;
   }
 };
 
 export const getTextToSpeech = async (text: string): Promise<string | null> => {
-    // Do not attempt to generate speech if we are offline, the AI isn't configured,
-    // or if the text is an error/offline message.
-    if (!navigator.onLine || !ai || text === OFFLINE_MESSAGE || text.startsWith(API_ERROR_MESSAGE_PREFIX)) {
+    // Do not attempt to generate speech if we are offline, the AI isn't configured.
+    // Audio is non-critical, so we can just return null instead of throwing.
+    if (!navigator.onLine || !ai) {
         return null;
     }
 

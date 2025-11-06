@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { RobotPart } from '../types';
 import RobotModel from './RobotModel';
 import Sidebar from './Sidebar';
-import { getPartDescription, getTextToSpeech, OFFLINE_MESSAGE, API_ERROR_MESSAGE_PREFIX } from '../services/geminiService';
+import { getPartDescription, getTextToSpeech } from '../services/geminiService';
 
 const robotPartsData: RobotPart[] = [
     { id: 'head', name: 'Cognitive Core', description: 'The robot\'s main thinking and sensing unit.' },
@@ -26,7 +26,7 @@ const RobotExplorer: React.FC = () => {
         setTimeout(() => setIsPanelVisible(true), 100);
     }, []);
 
-    const handleSelectPart = useCallback((partId: string | null) => {
+    const handleSelectPart = useCallback(async (partId: string | null) => {
         if (!partId) {
             setSelectedPart(null);
             setGeminiDescription('');
@@ -41,35 +41,24 @@ const RobotExplorer: React.FC = () => {
             setGeminiDescription('');
             setAudioData(null);
 
-            getPartDescription(part.name)
-                .then(desc => {
-                    const isError = desc === OFFLINE_MESSAGE || desc.startsWith(API_ERROR_MESSAGE_PREFIX);
-                    
-                    const finalDescription = isError
-                        ? `${part.description} [UPLINK INTERRUPTED. REVERTING TO ONBOARD DATA CACHE.]`
-                        : desc;
+            try {
+                const desc = await getPartDescription(part.name);
+                setGeminiDescription(desc);
+                setIsLoading(false);
 
-                    setGeminiDescription(finalDescription);
-                    setIsLoading(false);
+                const audioBase64 = await getTextToSpeech(desc);
+                setAudioData(audioBase64);
 
-                    // Only attempt to get speech if we have a live connection and valid description
-                    if (isError) {
-                        return Promise.resolve(null);
-                    }
-                    return getTextToSpeech(desc);
-                })
-                .then(audioBase64 => {
-                    setAudioData(audioBase64);
-                })
-                .catch(err => {
-                    console.error("Error during Gemini API fetch:", err);
-                    // Fallback in case of a promise rejection
-                    setGeminiDescription(`${part.description} [UPLINK INTERRUPTED. REVERTING TO ONBOARD DATA CACHE.]`);
-                    setIsLoading(false);
-                })
-                .finally(() => {
-                    setIsAudioLoading(false);
-                });
+            } catch (error) {
+                console.error("Error during Gemini API fetch:", error);
+                // On any error, fall back to the onboard data cache.
+                setGeminiDescription(`${part.description} [UPLINK INTERRUPTED. REVERTING TO ONBOARD DATA CACHE.]`);
+                setIsLoading(false);
+                setAudioData(null);
+            } finally {
+                // Ensure audio loading spinner always stops.
+                setIsAudioLoading(false);
+            }
         }
     }, []);
 
