@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { RobotPart } from '../types';
 import RobotModel from './RobotModel';
 import Sidebar from './Sidebar';
-import { getPartDescription, getTextToSpeech } from '../services/geminiService';
+import { getPartDescription, getTextToSpeech, OFFLINE_MESSAGE, API_ERROR_MESSAGE_PREFIX } from '../services/geminiService';
 
 const robotPartsData: RobotPart[] = [
     { id: 'head', name: 'Cognitive Core', description: 'The robot\'s main thinking and sensing unit.' },
@@ -43,21 +43,32 @@ const RobotExplorer: React.FC = () => {
 
             getPartDescription(part.name)
                 .then(desc => {
-                    setGeminiDescription(desc);
-                    setIsLoading(false); // Text is ready
-                    // Now fetch audio for the new description
+                    const isError = desc === OFFLINE_MESSAGE || desc.startsWith(API_ERROR_MESSAGE_PREFIX);
+                    
+                    const finalDescription = isError
+                        ? `${part.description} [UPLINK INTERRUPTED. REVERTING TO ONBOARD DATA CACHE.]`
+                        : desc;
+
+                    setGeminiDescription(finalDescription);
+                    setIsLoading(false);
+
+                    // Only attempt to get speech if we have a live connection and valid description
+                    if (isError) {
+                        return Promise.resolve(null);
+                    }
                     return getTextToSpeech(desc);
                 })
                 .then(audioBase64 => {
                     setAudioData(audioBase64);
                 })
                 .catch(err => {
-                    console.error("Error fetching data from Gemini:", err);
-                    setGeminiDescription('Error fetching data from Gemini.');
+                    console.error("Error during Gemini API fetch:", err);
+                    // Fallback in case of a promise rejection
+                    setGeminiDescription(`${part.description} [UPLINK INTERRUPTED. REVERTING TO ONBOARD DATA CACHE.]`);
                     setIsLoading(false);
                 })
                 .finally(() => {
-                    setIsAudioLoading(false); // Audio process is finished (success or fail)
+                    setIsAudioLoading(false);
                 });
         }
     }, []);
