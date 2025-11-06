@@ -60,63 +60,50 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, audi
     }
   }, []);
 
-  // Effect for handling audio playback (including autoplay)
+  // Effect to stop any playing audio when the selected part changes
   useEffect(() => {
-    // Stop and clear any previous audio source when the selected part changes.
-    if (sourceRef.current) {
-      sourceRef.current.onended = null;
-      sourceRef.current.stop();
-      sourceRef.current = null;
-    }
-
-    if (!audioData || !audioContextRef.current) {
-      setIsPlaying(false);
-      return;
-    }
-    
-    let isCancelled = false;
-
-    const playAudio = async () => {
-      if (audioContextRef.current!.state === 'suspended') {
-        await audioContextRef.current!.resume();
-      }
-
-      setIsPlaying(true);
-      try {
-        const audioBuffer = await decodeAudioData(
-            decode(audioData),
-            audioContextRef.current!,
-            24000, 1
-        );
-        if (isCancelled) return;
-
-        const source = audioContextRef.current!.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioContextRef.current!.destination);
-        source.onended = () => {
-          setIsPlaying(false);
-          sourceRef.current = null;
-        };
-        source.start();
-        sourceRef.current = source;
-      } catch (error) {
-        console.error("Failed to play audio:", error);
-        setIsPlaying(false);
-      }
-    };
-
-    playAudio();
-
-    // Cleanup function runs when `audioData` changes again, or on unmount.
+    // This is a cleanup function that runs when the component re-renders
+    // due to a new `selectedPart`, or when it unmounts. It ensures audio
+    // from a previously selected part doesn't continue playing.
     return () => {
-      isCancelled = true;
       if (sourceRef.current) {
-        sourceRef.current.onended = null; // Important to prevent state update after cleanup
+        sourceRef.current.onended = null; // Prevent state update after cleanup
         sourceRef.current.stop();
         sourceRef.current = null;
       }
+      setIsPlaying(false);
     };
-  }, [audioData]); // This effect is keyed to audioData changes.
+  }, [selectedPart]);
+
+  const handlePlayAudio = async () => {
+    if (!audioData || isPlaying || !audioContextRef.current) return;
+
+    if (audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
+    
+    setIsPlaying(true);
+    try {
+      const audioBuffer = await decodeAudioData(
+          decode(audioData),
+          audioContextRef.current!,
+          24000, 1
+      );
+
+      const source = audioContextRef.current!.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContextRef.current!.destination);
+      source.onended = () => {
+        setIsPlaying(false);
+        sourceRef.current = null;
+      };
+      source.start();
+      sourceRef.current = source;
+    } catch (error) {
+      console.error("Failed to play audio:", error);
+      setIsPlaying(false);
+    }
+  };
 
   const handleStopAudio = () => {
     if (sourceRef.current) {
@@ -144,10 +131,18 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, audi
               <div className="flex justify-between items-center">
                   <p className="text-sm text-slate-400 tracking-widest">GEMINI ANALYSIS</p>
                   
-                  {/* Loading spinner for audio */}
                   {isAudioLoading && <LoaderIcon className="w-5 h-5 animate-spin text-cyan-400" />}
 
-                  {/* Stop button appears only when audio is playing */}
+                  {!isAudioLoading && audioData && !isPlaying && (
+                      <button
+                          onClick={handlePlayAudio}
+                          className="text-cyan-400 hover:text-cyan-200 transition-colors"
+                          aria-label="Play audio description"
+                      >
+                          <SpeakerWaveIcon className="w-6 h-6" />
+                      </button>
+                  )}
+
                   {!isAudioLoading && isPlaying && (
                       <button
                           onClick={handleStopAudio}
@@ -158,9 +153,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, audi
                       </button>
                   )}
                   
-                  {/* Placeholder icon when audio is ready but not playing (finished or stopped) */}
-                  {!isAudioLoading && !isPlaying && audioData && (
-                      <SpeakerWaveIcon className="w-6 h-6 text-slate-600" />
+                  {/* Icon for when audio is unavailable */}
+                  {!isAudioLoading && !audioData && (
+                      <SpeakerWaveIcon className="w-6 h-6 text-slate-700" title="Audio unavailable" />
                   )}
               </div>
               {isLoading ? (
