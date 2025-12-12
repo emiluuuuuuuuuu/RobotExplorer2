@@ -102,7 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, isLo
         <div>
           <p className="font-mono text-base text-slate-400">OPERATOR</p>
           <p className="text-xl font-bold text-slate-200">ZUNAIRA SOOMRO</p>
-          <p className="text-sm text-slate-500">FROM 8-B</p>
+          <p className="text-sm text-slate-500">CLASS 8-B</p>
         </div>
       </div>
     </aside>
