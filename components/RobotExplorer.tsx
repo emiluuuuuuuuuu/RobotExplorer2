@@ -36,7 +36,7 @@ const RobotExplorer: React.FC = () => {
     return (
         <div className="flex flex-col h-screen w-full overflow-hidden p-4 md:p-8 animate-fade-in">
             <header className="flex-shrink-0">
-                <h1 className="text-4xl font-extrabold text-center text-cyan-300 tracking-widest uppercase">
+                <h1 className="text-5xl md:text-6xl font-extrabold text-center text-cyan-300 tracking-widest uppercase mb-4">
                     Robot Explorer
                 </h1>
             </header>
