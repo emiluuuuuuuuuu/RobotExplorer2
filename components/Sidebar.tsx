@@ -50,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, isLo
   
   const renderDescription = () => {
     return (
-        <div className="text-md text-slate-200 mt-1 min-h-[6rem]">
+        <div className="text-xl text-slate-200 mt-2 min-h-[8rem] leading-relaxed">
             <p>
                 {typedText}
                 {isTyping && <span className="blinking-cursor">▋</span>}
@@ -62,27 +62,27 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, isLo
 
   return (
     <aside className={`w-full md:w-1/3 lg:w-1/4 h-full flex flex-col bg-slate-950/50 backdrop-blur-sm border border-slate-700 rounded-lg p-6 transition-all duration-500 ease-in-out transform ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
-      <div className="flex-grow">
-        <h2 className="text-2xl font-bold text-cyan-300 border-b-2 border-cyan-300/30 pb-2">SYSTEM DIAGNOSTICS</h2>
+      <div className="flex-grow overflow-y-auto pr-2">
+        <h2 className="text-3xl font-bold text-cyan-300 border-b-2 border-cyan-300/30 pb-2">SYSTEM DIAGNOSTICS</h2>
         
         {selectedPart ? (
           <div className="mt-6 font-mono text-slate-300 animate-fade-in">
-            <div className="mb-4">
-              <p className="text-sm text-slate-400 tracking-widest">COMPONENT</p>
-              <h3 className="text-xl font-bold text-white">{selectedPart.name}</h3>
+            <div className="mb-6">
+              <p className="text-base text-slate-400 tracking-widest mb-1">COMPONENT</p>
+              <h3 className="text-3xl font-bold text-white">{selectedPart.name}</h3>
             </div>
-            <div className="mb-4">
-              <p className="text-sm text-slate-400 tracking-widest">BASE FUNCTION</p>
-              <p className="text-md text-slate-200">{selectedPart.description}</p>
+            <div className="mb-6">
+              <p className="text-base text-slate-400 tracking-widest mb-1">BASE FUNCTION</p>
+              <p className="text-xl text-slate-200 leading-relaxed">{selectedPart.description}</p>
             </div>
             <div>
               <div className="flex justify-between items-center">
-                  <p className="text-sm text-slate-400 tracking-widest">AI-ENHANCED ANALYSIS</p>
+                  <p className="text-base text-slate-400 tracking-widest">AI-ENHANCED ANALYSIS</p>
               </div>
               {isLoading ? (
                 <div className="flex items-center space-x-2 mt-2">
-                  <LoaderIcon className="w-5 h-5 animate-spin text-cyan-400" />
-                  <p>ACCESSING DATABASE...</p>
+                  <LoaderIcon className="w-6 h-6 animate-spin text-cyan-400" />
+                  <p className="text-lg">ACCESSING DATABASE...</p>
                 </div>
               ) : (
                 renderDescription()
@@ -90,18 +90,20 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, isLo
             </div>
           </div>
         ) : (
-          <div className="mt-10 text-center text-slate-500 font-mono">
-            <p>// NO COMPONENT SELECTED</p>
+          <div className="mt-10 text-center text-slate-500 font-mono text-lg">
+            <p className="mb-2">// NO COMPONENT SELECTED</p>
             <p>Awaiting user input...</p>
             <p>Hover over or click a robot part to analyze.</p>
           </div>
         )}
       </div>
 
-      <div className="flex-shrink-0 border-t border-slate-700 pt-4 mt-6 text-right">
-        <p className="font-mono text-sm text-slate-400">OPERATOR</p>
-        <p className="text-md font-bold text-slate-200">ZUNAIRA SOOMRO</p>
-        <p className="text-xs text-slate-500">FROM 8-B</p>
+      <div className="flex-shrink-0 border-t border-slate-700 pt-4 mt-6">
+        <div>
+          <p className="font-mono text-base text-slate-400">OPERATOR</p>
+          <p className="text-xl font-bold text-slate-200">ZUNAIRA SOOMRO</p>
+          <p className="text-sm text-slate-500">FROM 8-B</p>
+        </div>
       </div>
     </aside>
   );
