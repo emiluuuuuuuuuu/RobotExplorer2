@@ -4,34 +4,43 @@ import { LoaderIcon } from './icons';
 
 /**
  * A custom hook for creating a typewriter effect.
+ * Uses substring slicing to ensure text integrity and avoid state accumulation errors.
  * @param text The full text to be typed.
  * @param speed The speed in milliseconds between characters.
  * @returns An object containing the currently typed text and a boolean indicating if typing is in progress.
  */
-const useTypewriter = (text: string, speed: number = 25) => {
+const useTypewriter = (text: string, speed: number = 30) => {
     const [typedText, setTypedText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
 
     useEffect(() => {
+        // Reset immediately when text changes
         setTypedText('');
-        if (text) {
-            setIsTyping(true);
-            let i = 0;
-            const typingInterval = setInterval(() => {
-                if (i < text.length) {
-                    setTypedText(prev => prev + text.charAt(i));
-                    i++;
-                } else {
-                    clearInterval(typingInterval);
-                    setIsTyping(false);
-                }
-            }, speed);
+        
+        if (!text) {
+            setIsTyping(false);
+            return;
+        }
 
-            return () => {
+        setIsTyping(true);
+        let charIndex = 0;
+        
+        const typingInterval = setInterval(() => {
+            if (charIndex < text.length) {
+                // Increment index first, then slice. 
+                // This ensures we get the first character on the first tick.
+                charIndex++;
+                setTypedText(text.substring(0, charIndex));
+            } else {
                 clearInterval(typingInterval);
                 setIsTyping(false);
-            };
-        }
+            }
+        }, speed);
+
+        return () => {
+            clearInterval(typingInterval);
+            setIsTyping(false);
+        };
     }, [text, speed]);
 
     return { typedText, isTyping };
@@ -46,14 +55,14 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ selectedPart, geminiDescription, isLoading, isVisible }) => {
-  const { typedText, isTyping } = useTypewriter(geminiDescription, 20);
+  const { typedText, isTyping } = useTypewriter(geminiDescription, 25);
   
   const renderDescription = () => {
     return (
         <div className="text-xl text-slate-200 mt-2 min-h-[8rem] leading-relaxed">
             <p>
                 {typedText}
-                {isTyping && <span className="blinking-cursor">▋</span>}
+                {isTyping && <span className="blinking-cursor text-cyan-400">▋</span>}
             </p>
         </div>
     );
