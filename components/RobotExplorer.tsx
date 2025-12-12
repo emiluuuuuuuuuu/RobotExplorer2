@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { RobotPart } from '../types';
 import RobotModel from './RobotModel';
 import Sidebar from './Sidebar';
-import { getPartDescription } from '../services/geminiService';
 
 const robotPartsData: RobotPart[] = [
     { id: 'head', name: 'Cognitive Core', description: 'The robot\'s main thinking and sensing unit.' },
@@ -15,8 +14,6 @@ const robotPartsData: RobotPart[] = [
 
 const RobotExplorer: React.FC = () => {
     const [selectedPart, setSelectedPart] = useState<RobotPart | null>(null);
-    const [geminiDescription, setGeminiDescription] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isPanelVisible, setIsPanelVisible] = useState<boolean>(false);
 
     useEffect(() => {
@@ -24,28 +21,14 @@ const RobotExplorer: React.FC = () => {
         setTimeout(() => setIsPanelVisible(true), 100);
     }, []);
 
-    const handleSelectPart = useCallback(async (partId: string | null) => {
+    const handleSelectPart = useCallback((partId: string | null) => {
         if (!partId) {
             setSelectedPart(null);
-            setGeminiDescription('');
             return;
         }
         const part = robotPartsData.find(p => p.id === partId);
         if (part) {
             setSelectedPart(part);
-            setIsLoading(true);
-            setGeminiDescription('');
-
-            try {
-                const desc = await getPartDescription(part.name);
-                setGeminiDescription(desc);
-            } catch (error) {
-                console.error("Error during Gemini API fetch:", error);
-                // On any error, fall back silently to the onboard data cache.
-                setGeminiDescription(part.description);
-            } finally {
-                setIsLoading(false);
-            }
         }
     }, []);
 
@@ -63,8 +46,6 @@ const RobotExplorer: React.FC = () => {
                 </main>
                 <Sidebar
                     selectedPart={selectedPart}
-                    geminiDescription={geminiDescription}
-                    isLoading={isLoading}
                     isVisible={isPanelVisible}
                 />
             </div>
@@ -80,13 +61,6 @@ const animationStyles = `
 }
 .animate-fade-in {
     animation: fade-in 0.5s ease-out forwards;
-}
-@keyframes blink {
-    50% { opacity: 0; }
-}
-.blinking-cursor {
-    animation: blink 1s step-end infinite;
-    font-weight: bold;
 }
 `;
 

@@ -13,14 +13,27 @@ const RobotPart: React.FC<{
     isSelected: boolean;
     onHoverChange: (isHovered: boolean) => void;
 }> = ({ id, d, onSelect, isHovered, isSelected, onHoverChange }) => {
+    // Dynamic classes based on state
     const fillClass = isSelected 
-        ? 'fill-cyan-400' 
+        ? 'fill-cyan-500' 
         : isHovered 
         ? 'fill-slate-600' 
-        : 'fill-slate-700';
+        : 'fill-slate-800';
     
-    const strokeClass = isSelected ? 'stroke-cyan-300' : 'stroke-slate-950';
-    const transformClass = isHovered || isSelected ? 'scale-[1.03]' : 'scale-100';
+    const strokeClass = isSelected 
+        ? 'stroke-cyan-200' 
+        : isHovered 
+        ? 'stroke-cyan-400' 
+        : 'stroke-slate-950';
+        
+    const transformClass = isHovered || isSelected ? 'scale-105' : 'scale-100';
+    
+    // Add glow effect using drop-shadow
+    const filterClass = isSelected 
+        ? 'drop-shadow-[0_0_15px_rgba(6,182,212,0.6)]' 
+        : isHovered 
+        ? 'drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]' 
+        : '';
     
     return (
         <path
@@ -29,9 +42,9 @@ const RobotPart: React.FC<{
             onClick={onSelect}
             onMouseEnter={() => onHoverChange(true)}
             onMouseLeave={() => onHoverChange(false)}
-            className={`cursor-pointer transition-all duration-200 ${fillClass} ${strokeClass} origin-center ${transformClass}`}
+            className={`cursor-pointer transition-all duration-300 ease-out ${fillClass} ${strokeClass} origin-center ${transformClass} ${filterClass}`}
             style={{ transformBox: 'fill-box' }}
-            strokeWidth="2"
+            strokeWidth={isSelected || isHovered ? "3" : "2"}
             strokeLinejoin="round"
         />
     );
@@ -57,7 +70,7 @@ const RobotModel: React.FC<RobotModelProps> = ({ selectedPartId, onSelectPart })
     ];
 
     return (
-        <svg viewBox="0 0 300 300" className="w-full h-full max-w-2xl max-h-2xl drop-shadow-lg">
+        <svg viewBox="0 0 300 300" className="w-full h-full max-w-2xl max-h-2xl drop-shadow-2xl">
             <g>
                  {/* Non-interactive neck part */}
                 <path d="M145 105 h10 v10 h-10 z" className="fill-slate-800 stroke-slate-950" strokeWidth="2" />
